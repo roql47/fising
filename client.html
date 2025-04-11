@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>🎣 낚시 채팅방</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f6f9;
+      color: #333;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+    h1 {
+      color: #4a90e2;
+      text-align: center;
+    }
+    #status {
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    #messages {
+      height: 300px;
+      overflow-y: auto;
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      white-space: pre-line;
+    }
+    #messageForm {
+      display: flex;
+      gap: 5px;
+    }
+    #messageInput {
+      flex: 1;
+      padding: 10px;
+      font-size: 14px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 10px 20px;
+      background: #4a90e2;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #357ab7;
+    }
+    #controls {
+      margin-bottom: 10px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    #controls label {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    #controls input {
+      flex: 1;
+      padding: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎣 낚시 채팅방</h1>
+  <div id="status">서버 연결 상태: <span style="color:red;">연결 중...</span></div>
+  
+  <div id="controls">
+    <label>닉네임: <input id="nicknameInput" placeholder="닉네임" /></label>
+    <label>방 이름: <input id="roomInput" value="기본방" /></label>
+    <button id="joinButton">입장</button>
+  </div>
+
+  <div id="messages"></div>
+
+  <form id="messageForm" style="display:none;">
+    <input type="text" id="messageInput" placeholder="명령어 또는 메시지 입력..." />
+    <button type="submit">전송</button>
+  </form>
+
+  <script>
+    const statusText = document.getElementById('status');
+    const messages = document.getElementById('messages');
+    const form = document.getElementById('messageForm');
+    const input = document.getElementById('messageInput');
+    const nicknameInput = document.getElementById('nicknameInput');
+    const roomInput = document.getElementById('roomInput');
+    const joinBtn = document.getElementById('joinButton');
+
+    let socket;
+
+    function addMessage(msg) {
+      const div = document.createElement('div');
+      div.textContent = msg;
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    joinBtn.onclick = () => {
+      const nickname = nicknameInput.value.trim();
+      const room = roomInput.value.trim() || '기본방';
+      if (!nickname) return alert('닉네임을 입력하세요.');
+
+      // 이미 연결된 소켓이 있으면 닫음
+      if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
+        socket.close();
+      }
+
+      socket = new WebSocket('ws://localhost:8080');
+
+      socket.onopen = () => {
+        socket.send(JSON.stringify({ type: 'join', nickname, room }));
+        statusText.innerHTML = '서버 연결 상태: <span style="color:green;">연결됨</span>';
+        form.style.display = 'flex';
+        input.focus();
+      };
+
+      socket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.text) {
+            addMessage(data.text);
+          }
+        } catch (e) {
+          // JSON 형식이 아닐 경우 fallback
+          addMessage(event.data);
+        }
+      };
+
+      socket.onclose = () => {
+        statusText.innerHTML = '서버 연결 상태: <span style="color:red;">연결 종료</span>';
+        addMessage('❌ 서버 연결 종료됨');
+        form.style.display = 'none';
+      };
+
+      form.onsubmit = (e) => {
+        e.preventDefault();
+        if (!input.value.trim()) return;
+        socket.send(JSON.stringify({ type: 'message', text: input.value.trim() }));
+        input.value = '';
+      };
+    };
+  </script>
+</body>
+</html>
