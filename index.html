@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>🎣 낚시 채팅방</title>
+  <style>
+    /* 스타일은 그대로 유지 */
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f6f9;
+      color: #333;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+    /* 추가 스타일 생략 */
+  </style>
+</head>
+<body>
+  <h1>🎣 낚시 채팅방</h1>
+  <div id="status">서버 연결 상태: <span style="color:red;">연결 중...</span></div>
+  <div id="controls">
+    <label>닉네임: <input id="nicknameInput" placeholder="닉네임" /></label>
+    <label>방 이름: <input id="roomInput" value="기본방" /></label>
+    <button id="joinButton">입장</button>
+  </div>
+  <div id="messages"></div>
+  <form id="messageForm" style="display:none;">
+    <input type="text" id="messageInput" placeholder="명령어 또는 메시지 입력..." />
+    <button type="submit">전송</button>
+  </form>
+
+  <script src="client.js"></script>
+</body>
+</html>
